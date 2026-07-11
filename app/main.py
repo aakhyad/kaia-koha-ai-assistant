@@ -1,3 +1,5 @@
+
+from app.routes.health import router as health_router
 from app.core.logging import logger, setup_logging
 from fastapi import FastAPI
 
@@ -9,6 +11,8 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description=settings.APP_DESCRIPTION,
 )
+
+app.include_router(health_router)
 
 @app.on_event("startup")
 async def startup():
@@ -25,14 +29,6 @@ async def root():
         "application": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "message": "Welcome to KAIA - Koha AI Assistant",
-    }
-
-
-@app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "version": settings.APP_VERSION,
     }
 
 
