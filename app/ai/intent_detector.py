@@ -132,6 +132,47 @@ class IntentDetector:
             )
 
         # -----------------------------
+        # Item Status
+        # -----------------------------
+        if (
+            "barcode" in msg
+            or "copy" in msg
+            or "item" in msg
+        ):
+
+            barcode = ""
+
+            for word in message.split():
+                word = word.strip(",.?!")
+
+                if word.upper().startswith("P"):
+                    barcode = word.upper()
+                    break
+
+            return Intent(
+                action="item_status",
+                query=barcode,
+            )
+
+        # -----------------------------
+        # Current Checkouts
+        # -----------------------------
+        if (
+            "current checkouts" in msg
+            or "show current checkouts" in msg
+            or "list current checkouts" in msg
+            or "show checkouts" in msg
+            or "list checkouts" in msg
+            or "issued books" in msg
+            or "borrowed books" in msg
+        ):
+
+            return Intent(
+                action="current_checkouts",
+                query="",
+            )
+
+        # -----------------------------
         # General Chat
         # -----------------------------
         return Intent(

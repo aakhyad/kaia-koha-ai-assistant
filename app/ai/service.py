@@ -7,6 +7,8 @@ from app.tools.search_books import search_books
 from app.tools.search_patrons import search_patrons
 from app.tools.book_details import book_details
 from app.tools.book_availability import book_availability
+from app.tools.item_status import item_status
+from app.tools.current_checkouts import current_checkouts
 
 
 class AIService:
@@ -20,8 +22,11 @@ class AIService:
 
         intent = intent_detector.detect(message)
 
-        print(f"Intent : {intent.action}")
-        print(f"Query  : {intent.query}")
+        print("=" * 60)
+        print("Message :", message)
+        print("Intent  :", intent.action)
+        print("Query   :", intent.query)
+        print("=" * 60)
 
         # ---------------------------------
         # Search Books
@@ -42,8 +47,6 @@ class AIService:
 
             books = await biblios_service.search(intent.query)
 
-            print("Books:", books)
-
             if not books:
                 return "Book not found."
 
@@ -58,14 +61,26 @@ class AIService:
 
             books = await biblios_service.search(intent.query)
 
-            print("Availability Search:", books)
-
             if not books:
                 return "Book not found."
 
             return await book_availability(
                 books[0]["biblio_id"]
             )
+
+        # ---------------------------------
+        # Item Status
+        # ---------------------------------
+        if intent.action == "item_status":
+
+            return await item_status(intent.query)
+
+        # ---------------------------------
+        # Current Checkouts
+        # ---------------------------------
+        if intent.action == "current_checkouts":
+
+            return await current_checkouts()
 
         # ---------------------------------
         # General Chat
