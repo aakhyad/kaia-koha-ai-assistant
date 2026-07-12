@@ -1,44 +1,142 @@
-import json
-
-from app.ai.providers.factory import get_ai_provider
 from app.ai.intent import Intent
 
 
 class IntentDetector:
-
-    def __init__(self):
-        self.provider = get_ai_provider()
+    """Detect the user's intent."""
 
     def detect(self, message: str) -> Intent:
 
-        prompt = f"""
-You are an AI assistant for Koha Library.
+        msg = message.lower().strip()
 
-Return ONLY JSON.
+        # -----------------------------
+        # Book Search
+        # -----------------------------
+        if (
+            "search book" in msg
+            or "search books" in msg
+            or "find book" in msg
+            or "find books" in msg
+            or "book on" in msg
+            or "books on" in msg
+        ):
 
-Examples
+            query = msg
 
-User: Search AI books
-{{"action":"search_books","query":"AI"}}
+            for phrase in [
+                "search books on",
+                "search book on",
+                "find books on",
+                "find book on",
+                "search books",
+                "search book",
+                "find books",
+                "find book",
+                "books on",
+                "book on",
+            ]:
+                if query.startswith(phrase):
+                    query = query[len(phrase):].strip()
+                    break
 
-User: Find biotechnology books
-{{"action":"search_books","query":"biotechnology"}}
+            return Intent(
+                action="search_books",
+                query=query,
+            )
 
-User: Hello
-{{"action":"general_chat","query":""}}
+        # -----------------------------
+        # Patron Search
+        # -----------------------------
+        if (
+            "search patron" in msg
+            or "find patron" in msg
+            or "search member" in msg
+            or "find member" in msg
+        ):
 
-User:
+            query = msg
 
-{message}
-"""
+            for phrase in [
+                "search patron",
+                "find patron",
+                "search member",
+                "find member",
+            ]:
+                if query.startswith(phrase):
+                    query = query[len(phrase):].strip()
+                    break
 
-        reply = self.provider.chat(prompt)
+            return Intent(
+                action="search_patron",
+                query=query,
+            )
 
-        data = json.loads(reply)
+        # -----------------------------
+        # Book Details
+        # -----------------------------
+        if (
+            "show details of" in msg
+            or "book details of" in msg
+            or "details of" in msg
+            or "show details" in msg
+            or "book details" in msg
+        ):
 
+            query = msg
+
+            for phrase in [
+                "show details of",
+                "book details of",
+                "details of",
+                "show details",
+                "book details",
+            ]:
+                if query.startswith(phrase):
+                    query = query[len(phrase):].strip()
+                    break
+
+            return Intent(
+                action="book_details",
+                query=query,
+            )
+
+        # -----------------------------
+        # Book Availability
+        # -----------------------------
+        if (
+            "available" in msg
+            or "availability" in msg
+            or "copies" in msg
+        ):
+
+            query = msg
+
+            for phrase in [
+                "how many copies of",
+                "copies of",
+                "availability of",
+                "is",
+                "available",
+            ]:
+                query = query.replace(phrase, "")
+
+            query = (
+                query.replace("?", "")
+                     .replace(".", "")
+                     .replace(",", "")
+                     .strip()
+            )
+
+            return Intent(
+                action="book_availability",
+                query=query,
+            )
+
+        # -----------------------------
+        # General Chat
+        # -----------------------------
         return Intent(
-            action=data["action"],
-            query=data["query"]
+            action="general_chat",
+            query=message,
         )
 
 
