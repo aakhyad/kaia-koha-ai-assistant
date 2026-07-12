@@ -1,6 +1,8 @@
-from app.ai.providers.factory import get_ai_provider
-from app.koha.biblios import biblios_service
 
+from app.ai.providers.factory import get_ai_provider
+from app.ai.intent_detector import intent_detector
+from app.koha.biblios import biblios_service
+from app.tools.search_books import search_books
 
 class AIService:
     """Main AI service."""
@@ -9,46 +11,12 @@ class AIService:
         self.provider = get_ai_provider()
 
     async def chat(self, message: str) -> str:
-        msg = message.lower()
 
-        if (
-            "search book" in msg
-            or "search books" in msg
-            or "find book" in msg
-            or "find books" in msg
-            or "book on" in msg
-            or "books on" in msg
-        ):
+        intent = intent_detector.detect(message)
 
-            query = msg
+        if intent.action == "search_books":
 
-            for phrase in [
-                "search books on",
-                "search book on",
-                "find books on",
-                "find book on",
-                "search books",
-                "search book",
-                "find books",
-                "find book",
-                "books on",
-                "book on",
-            ]:
-                if query.startswith(phrase):
-                    query = query[len(phrase):].strip()
-                    break
-
-            results = await biblios_service.search(query)
-
-            if not results:
-                return f"No books found for '{query}'."
-
-            response = "Books found:\n\n"
-
-            for book in results[:10]:
-                response += f"• {book.get('title', 'Untitled')}\n"
-
-            return response
+           return await search_books(intent.query)
 
         return self.provider.chat(message)
 
