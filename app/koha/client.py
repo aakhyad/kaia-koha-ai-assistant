@@ -14,16 +14,34 @@ class KohaClient:
         )
 
     async def get(self, endpoint: str):
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.base_url}{endpoint}",
-                auth=self.auth,
-                headers={
-                    "Accept": "application/json",
-                },
-            )
-            response.raise_for_status()
-            return response.json()
+        url = f"{self.base_url}{endpoint}"
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    url,
+                    auth=self.auth,
+                    headers={
+                        "Accept": "application/json",
+                    },
+                )
+
+                response.raise_for_status()
+                return response.json()
+
+        except httpx.HTTPStatusError as e:
+            print(f"Koha API HTTP Error: {e.response.status_code}")
+            print(f"URL: {url}")
+            print(f"Response: {e.response.text}")
+            raise
+
+        except httpx.ReadTimeout:
+            print(f"Koha API timeout: {url}")
+            raise
+
+        except Exception as e:
+            print(f"Unexpected Koha API error: {e}")
+            raise
 
 
 koha_client = KohaClient()
